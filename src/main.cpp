@@ -13,16 +13,15 @@ using json = nlohmann::json;
 // Checks if the SocketIO event has JSON data.
 // If there is data the JSON object in string format will be returned,
 // else the empty string "" will be returned.
-std::string hasData(std::string s) {
+std::string hasData(std::string s)
+{
   auto found_null = s.find("null");
   auto b1 = s.find_first_of("[");
   auto b2 = s.find_first_of("]");
-  if (found_null != std::string::npos) {
+  if (found_null != std::string::npos)
     return "";
-  }
-  else if (b1 != std::string::npos && b2 != std::string::npos) {
+  else if (b1 != std::string::npos && b2 != std::string::npos)
     return s.substr(b1, b2 - b1 + 1);
-  }
   return "";
 }
 
@@ -31,14 +30,21 @@ int main(int argc, char* argv[])
   uWS::Hub h;
 
   bool verbose = false;
+  bool nolidar = false;
+  bool noradar = false;
   for (int i = 0; i < argc; ++i)
   {
     if (strcmp("-v", argv[i]) == 0)
       verbose = true;
+    // lidar alone yields betters results than radar alone
+    else if (strcmp("-nl", argv[i]) == 0)
+      nolidar = true;
+    else if (strcmp("-nr", argv[i]) == 0)
+      noradar = true;
   }
 
   // Create a Kalman Filter instance
-  FusionEKF fusionEKF(verbose);
+  FusionEKF fusionEKF(verbose, nolidar, noradar);
 
   // used to compute the RMSE later
   vector<VectorXd> estimations;

@@ -9,8 +9,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
-FusionEKF::FusionEKF(bool verbose)
- : is_initialized_(false), verbose_(verbose), previous_timestamp_(0), 
+FusionEKF::FusionEKF(bool verbose, bool nolidar, bool noradar)
+ : is_initialized_(false), verbose_(verbose), nolidar_(nolidar), noradar_(noradar), previous_timestamp_(0), 
    Noise_ax(9.), Noise_ay(9.)
 {
   // Measurement covariance matrix - laser
@@ -68,6 +68,9 @@ FusionEKF::processMeasurement(const MeasurementPackage& measurement_pack)
    *  Initialization
    ****************************************************************************/
   const float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1.0E6; // dt - expressed in usec
+
+  if (nolidar_ && measurement_pack.sensor_type_ == MeasurementPackage::LASER) return;
+  if (noradar_ && measurement_pack.sensor_type_ == MeasurementPackage::RADAR) return;
 
   if (!is_initialized_ || fabs(dt) > 60)
   {
