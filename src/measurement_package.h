@@ -13,6 +13,8 @@ public:
   } sensor_type_;
 
   Eigen::VectorXd raw_measurements_;
+  // LASER - px, py
+  // RADAR - ro, theta, ro_dot
 };
 
 #endif /* MEASUREMENT_PACKAGE_H_ */

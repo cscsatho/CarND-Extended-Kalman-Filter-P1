@@ -34,11 +34,13 @@ int main()
   FusionEKF fusionEKF;
 
   // used to compute the RMSE later
-  Tools tools;
   vector<VectorXd> estimations;
   vector<VectorXd> ground_truth;
+  VectorXd gt_values(4);
+  VectorXd estimate(4);
 
-  h.onMessage([&fusionEKF,&tools,&estimations,&ground_truth](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  //h.onMessage([&fusionEKF,&estimations,&ground_truth](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
+  h.onMessage([&fusionEKF,&estimations,&ground_truth,&gt_values,&estimate](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length, uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
     // The 2 signifies a websocket event
@@ -76,7 +78,11 @@ int main()
           		meas_package.raw_measurements_ << px, py;
           		iss >> timestamp;
           		meas_package.timestamp_ = timestamp;
+                        //std::cout << "L" << std::endl;
           } else if (sensor_type.compare("R") == 0) {
+        //std::string msg = "42[\"manual\",{}]";
+        //ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
+
 
       	  		meas_package.sensor_type_ = MeasurementPackage::RADAR;
           		meas_package.raw_measurements_ = VectorXd(3);
@@ -86,10 +92,13 @@ int main()
           		iss >> ro;
           		iss >> theta;
           		iss >> ro_dot;
-          		meas_package.raw_measurements_ << ro,theta, ro_dot;
+          		meas_package.raw_measurements_ << ro, theta, ro_dot;
           		iss >> timestamp;
           		meas_package.timestamp_ = timestamp;
+                        //std::cout << "R" << std::endl;
+
           }
+
           float x_gt;
     	  float y_gt;
     	  float vx_gt;
@@ -98,33 +107,43 @@ int main()
     	  iss >> y_gt;
     	  iss >> vx_gt;
     	  iss >> vy_gt;
-    	  VectorXd gt_values(4);
+
+          //VectorXd gt_values(4);
+
+          //std::cout << "gt_values() << x_gt=" << x_gt << std::endl;
     	  gt_values(0) = x_gt;
+          //std::cout << "gt_values() << y_gt=" << y_gt << std::endl;
     	  gt_values(1) = y_gt; 
+          //std::cout << "gt_values() << vx_gt=" << vx_gt << std::endl;
     	  gt_values(2) = vx_gt;
+          //std::cout << "gt_values() << vy_gt=" << vy_gt << std::endl;
     	  gt_values(3) = vy_gt;
     	  ground_truth.push_back(gt_values);
           
           //Call ProcessMeasurment(meas_package) for Kalman filter
-    	  fusionEKF.ProcessMeasurement(meas_package);    	  
+    	  fusionEKF.processMeasurement(meas_package);    	  
 
     	  //Push the current estimated x,y positon from the Kalman filter's state vector
 
-    	  VectorXd estimate(4);
+    	  //VectorXd estimate(4);
 
     	  double p_x = fusionEKF.ekf_.x_(0);
     	  double p_y = fusionEKF.ekf_.x_(1);
-    	  double v1  = fusionEKF.ekf_.x_(2);
-    	  double v2 = fusionEKF.ekf_.x_(3);
+    	  double v_x = fusionEKF.ekf_.x_(2);
+    	  double v_y = fusionEKF.ekf_.x_(3);
 
+          //std::cout << "estimate() << p_x=" << p_x << std::endl;
     	  estimate(0) = p_x;
+          //std::cout << "estimate() << p_y=" << p_y << std::endl;
     	  estimate(1) = p_y;
-    	  estimate(2) = v1;
-    	  estimate(3) = v2;
+          //std::cout << "estimate() << v1=" << v1 << std::endl;
+    	  estimate(2) = v_x;
+          //std::cout << "estimate() << v2=" << v2 << std::endl;
+    	  estimate(3) = v_y;
     	  
     	  estimations.push_back(estimate);
 
-    	  VectorXd RMSE = tools.CalculateRMSE(estimations, ground_truth);
+    	  VectorXd RMSE = Tools::CalculateRMSE(estimations, ground_truth);
 
           json msgJson;
           msgJson["estimate_x"] = p_x;
@@ -139,7 +158,7 @@ int main()
 	  
         }
       } else {
-        
+        //std::cout << "M*" << std::endl;
         std::string msg = "42[\"manual\",{}]";
         ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
       }

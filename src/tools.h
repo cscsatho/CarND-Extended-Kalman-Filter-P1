@@ -12,23 +12,25 @@ public:
   /**
   * Constructor.
   */
-  Tools();
+  Tools() = default;
 
   /**
   * Destructor.
   */
-  virtual ~Tools();
+  ~Tools() = default;
 
   /**
   * A helper method to calculate RMSE.
   */
-  VectorXd CalculateRMSE(const vector<VectorXd> &estimations, const vector<VectorXd> &ground_truth);
+  static VectorXd CalculateRMSE(const vector<VectorXd>& estimations, const vector<VectorXd>& ground_truth);
 
   /**
   * A helper method to calculate Jacobians.
   */
-  MatrixXd CalculateJacobian(const VectorXd& x_state);
+  static void CalculateJacobian(const VectorXd& x_state, MatrixXd& Hj);
 
+  static const float EPS;
+//  static const int MaxWnd;
 };
 
 #endif /* TOOLS_H_ */
