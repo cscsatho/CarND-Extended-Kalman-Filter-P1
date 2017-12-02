@@ -11,7 +11,7 @@
 class FusionEKF
 {
 public:
-  FusionEKF();
+  FusionEKF(bool verbose);
   virtual ~FusionEKF() = default;
 
   // Running the whole flow of the Kalman Filter from here
@@ -23,6 +23,7 @@ public:
 private:
   // check whether the tracking toolbox was initialized or not (first measurement)
   bool is_initialized_;
+  bool verbose_;
 
   // previous timestamp
   long long previous_timestamp_;

@@ -6,14 +6,11 @@ using Eigen::MatrixXd;
 using std::vector;
 
 const float Tools::EPS = 1E-5;
-//const int Tools::MaxWnd = 300;
 
 VectorXd
 Tools::CalculateRMSE(const vector<VectorXd>& estimations,
                      const vector<VectorXd>& ground_truth)
 {
-  // calculating the RMSE here - with sliding window of maximal Tools::MaxWnd entries
-
    VectorXd rmse(4);
    rmse << 0, 0, 0, 0;
 
@@ -33,15 +30,11 @@ Tools::CalculateRMSE(const vector<VectorXd>& estimations,
    }
 
    // accumulate squared residuals
-   //for (int i = estimations.size() <= MaxWnd ? 0 : estimations.size() - MaxWnd; i < estimations.size(); ++i)
    for (int i = 0; i < estimations.size(); ++i)
    {
-//       if (i < 5) std::cout << "("<<i<<")est=" << estimations[i] << std::endl; // FIXME
-//       if (i < 5) std::cout << "("<<i<<")gnd=" << ground_truth[i] << std::endl; // FIXME
        VectorXd diff = estimations[i] - ground_truth[i];
-//       if (i < 5) std::cout << "("<<i<<")diff=" << diff << std::endl; // FIXME
        diff = diff.array() * diff.array();
-       rmse += diff; //diff.array() * diff.array();
+       rmse += diff;
    }
 
    // calculate the mean
@@ -72,7 +65,7 @@ Tools::CalculateJacobian(const VectorXd& x_state, MatrixXd& Hj)
   // Check division by zero
   if (fabs(c1) < EPS)
   {
-    cout << "CalculateJacobian () - Error - Division by Zero" << endl;
+    std::cerr << "CalculateJacobian () - Error - Division by Zero" << endl;
     return;
   }
 

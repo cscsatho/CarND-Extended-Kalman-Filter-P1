@@ -9,8 +9,8 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using std::vector;
 
-FusionEKF::FusionEKF()
- : is_initialized_(false), previous_timestamp_(0), 
+FusionEKF::FusionEKF(bool verbose)
+ : is_initialized_(false), verbose_(verbose), previous_timestamp_(0), 
    Noise_ax(9.), Noise_ay(9.)
 {
   // Measurement covariance matrix - laser
@@ -59,7 +59,6 @@ FusionEKF::FusionEKF()
 //             0, 0, 0, 0;
 
   // No need to initialize ekf_.H_ and ekf_.R_
-
 }
 
 void
@@ -69,7 +68,6 @@ FusionEKF::processMeasurement(const MeasurementPackage& measurement_pack)
    *  Initialization
    ****************************************************************************/
   const float dt = (measurement_pack.timestamp_ - previous_timestamp_) / 1.0E6; // dt - expressed in usec
-//  cout << "dt=" << dt << " ts=" << measurement_pack.timestamp_/1000 << " pts=" << previous_timestamp_/1000 << endl;
 
   if (!is_initialized_ || fabs(dt) > 60)
   {
@@ -77,13 +75,12 @@ FusionEKF::processMeasurement(const MeasurementPackage& measurement_pack)
     // Creating the covariance matrix
 
     // first measurement
-    cout << "EKF: " << endl;
+    if (verbose_) cout << "EKF: " << endl;
 
     if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR)
     {
       // Convert radar from polar to cartesian coordinates and initialize state
       // [0]=ro, [1]=theta, [2]=ro_dot
-//      cout << "(R*)" << endl;
       ekf_.x_ << cos(measurement_pack.raw_measurements_[1]) * measurement_pack.raw_measurements_[0],
                  sin(measurement_pack.raw_measurements_[1]) * measurement_pack.raw_measurements_[0],
                  cos(measurement_pack.raw_measurements_[1]) * measurement_pack.raw_measurements_[2],
@@ -92,7 +89,6 @@ FusionEKF::processMeasurement(const MeasurementPackage& measurement_pack)
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER)
     {
       // Initialize state
-//      cout << "(L*)" << endl;
       ekf_.x_ << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 0, 0;
     }
 
@@ -126,8 +122,6 @@ FusionEKF::processMeasurement(const MeasurementPackage& measurement_pack)
   // Calling the Kalman Filter predict() function
   ekf_.predict();
 
-//  cout << "xPred_ = " << ekf_.x_ << endl;
-
   /*****************************************************************************
    *  Update
    ****************************************************************************/
@@ -136,7 +130,6 @@ FusionEKF::processMeasurement(const MeasurementPackage& measurement_pack)
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR)
   {
     // Radar updates
-//    cout << "(R)" << endl;
     Tools::CalculateJacobian(ekf_.x_, Hj_);
     ekf_.H_ = Hj_;
     ekf_.R_ = R_radar_;
@@ -145,13 +138,15 @@ FusionEKF::processMeasurement(const MeasurementPackage& measurement_pack)
   else // if (measurement_pack.sensor_type_ == MeasurementPackage::LASER)
   {
     // Laser updates
-//    cout << "(L)" << endl;
     ekf_.H_ = H_laser_;
     ekf_.R_ = R_laser_;
     ekf_.update(measurement_pack.raw_measurements_);
   }
 
   // print the output
-  cout << "x_ = " << ekf_.x_ << endl;
-  cout << "P_ = " << ekf_.P_ << endl;
+  if (verbose_)
+  {
+    cout << "x_ = " << ekf_.x_ << endl;
+    cout << "P_ = " << ekf_.P_ << endl;
+  }
 }

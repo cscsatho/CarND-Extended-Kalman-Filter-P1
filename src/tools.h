@@ -7,30 +7,18 @@ using Eigen::MatrixXd;
 using Eigen::VectorXd;
 using namespace std;
 
-class Tools {
+class Tools
+{
 public:
-  /**
-  * Constructor.
-  */
   Tools() = default;
-
-  /**
-  * Destructor.
-  */
   ~Tools() = default;
 
-  /**
-  * A helper method to calculate RMSE.
-  */
+  // A helper method to calculate RMSE
   static VectorXd CalculateRMSE(const vector<VectorXd>& estimations, const vector<VectorXd>& ground_truth);
-
-  /**
-  * A helper method to calculate Jacobians.
-  */
+  // A helper method to calculate Jacobians
   static void CalculateJacobian(const VectorXd& x_state, MatrixXd& Hj);
 
   static const float EPS;
-//  static const int MaxWnd;
 };
 
 #endif /* TOOLS_H_ */

@@ -26,12 +26,19 @@ std::string hasData(std::string s) {
   return "";
 }
 
-int main()
+int main(int argc, char* argv[])
 {
   uWS::Hub h;
 
+  bool verbose = false;
+  for (int i = 0; i < argc; ++i)
+  {
+    if (strcmp("-v", argv[i]) == 0)
+      verbose = true;
+  }
+
   // Create a Kalman Filter instance
-  FusionEKF fusionEKF;
+  FusionEKF fusionEKF(verbose);
 
   // used to compute the RMSE later
   vector<VectorXd> estimations;
@@ -52,10 +59,10 @@ int main()
       if (s != "") {
       	
         auto j = json::parse(s);
-
         std::string event = j[0].get<std::string>();
         
-        if (event == "telemetry") {
+        if (event == "telemetry")
+        {
           // j[1] is the data JSON object
           
           string sensor_measurment = j[1]["sensor_measurement"];
@@ -68,7 +75,8 @@ int main()
     	  string sensor_type;
     	  iss >> sensor_type;
 
-    	  if (sensor_type.compare("L") == 0) {
+    	  if (sensor_type.compare("L") == 0)
+          {
       	  		meas_package.sensor_type_ = MeasurementPackage::LASER;
           		meas_package.raw_measurements_ = VectorXd(2);
           		float px;
@@ -78,12 +86,9 @@ int main()
           		meas_package.raw_measurements_ << px, py;
           		iss >> timestamp;
           		meas_package.timestamp_ = timestamp;
-                        //std::cout << "L" << std::endl;
-          } else if (sensor_type.compare("R") == 0) {
-        //std::string msg = "42[\"manual\",{}]";
-        //ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
-
-
+          }
+          else if (sensor_type.compare("R") == 0)
+          {
       	  		meas_package.sensor_type_ = MeasurementPackage::RADAR;
           		meas_package.raw_measurements_ = VectorXd(3);
           		float ro;
@@ -95,8 +100,6 @@ int main()
           		meas_package.raw_measurements_ << ro, theta, ro_dot;
           		iss >> timestamp;
           		meas_package.timestamp_ = timestamp;
-                        //std::cout << "R" << std::endl;
-
           }
 
           float x_gt;
@@ -108,15 +111,9 @@ int main()
     	  iss >> vx_gt;
     	  iss >> vy_gt;
 
-          //VectorXd gt_values(4);
-
-          //std::cout << "gt_values() << x_gt=" << x_gt << std::endl;
     	  gt_values(0) = x_gt;
-          //std::cout << "gt_values() << y_gt=" << y_gt << std::endl;
     	  gt_values(1) = y_gt; 
-          //std::cout << "gt_values() << vx_gt=" << vx_gt << std::endl;
     	  gt_values(2) = vx_gt;
-          //std::cout << "gt_values() << vy_gt=" << vy_gt << std::endl;
     	  gt_values(3) = vy_gt;
     	  ground_truth.push_back(gt_values);
           
@@ -132,13 +129,9 @@ int main()
     	  double v_x = fusionEKF.ekf_.x_(2);
     	  double v_y = fusionEKF.ekf_.x_(3);
 
-          //std::cout << "estimate() << p_x=" << p_x << std::endl;
     	  estimate(0) = p_x;
-          //std::cout << "estimate() << p_y=" << p_y << std::endl;
     	  estimate(1) = p_y;
-          //std::cout << "estimate() << v1=" << v1 << std::endl;
     	  estimate(2) = v_x;
-          //std::cout << "estimate() << v2=" << v2 << std::endl;
     	  estimate(3) = v_y;
     	  
     	  estimations.push_back(estimate);
@@ -153,17 +146,16 @@ int main()
           msgJson["rmse_vx"] = RMSE(2);
           msgJson["rmse_vy"] = RMSE(3);
           auto msg = "42[\"estimate_marker\"," + msgJson.dump() + "]";
-          // std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
 	  
         }
-      } else {
-        //std::cout << "M*" << std::endl;
+      }
+      else 
+      {
         std::string msg = "42[\"manual\",{}]";
         ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
       }
     }
-
   });
 
   // We don't need this since we're not using HTTP but if it's removed the program
